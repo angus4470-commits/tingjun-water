@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>亭君的專屬喝水紀錄</title>
+<style>
+  body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background-color: #E0F7FA; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 100vh; 
+    margin: 0; 
+  }
+  .card { 
+    background: white; 
+    padding: 30px 20px; 
+    border-radius: 20px; 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05); 
+    text-align: center; 
+    max-width: 320px; 
+    width: 90%; 
+  }
+  h1 { color: #00838F; font-size: 22px; margin-top: 0; }
+  p.subtitle { color: #78909C; font-size: 14px; margin-bottom: 20px; }
+  .status { font-size: 18px; color: #333; font-weight: bold; margin-bottom: 15px; }
+  
+  .progress-container { 
+    width: 100%; 
+    background-color: #ECEFF1; 
+    border-radius: 30px; 
+    margin: 20px 0; 
+    height: 35px; 
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-bar { 
+    height: 100%; 
+    background-color: #26C6DA; 
+    width: 0%; 
+    transition: width 0.4s ease; 
+  }
+  
+  .buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+  button { 
+    flex: 1; 
+    min-width: 45%; 
+    padding: 12px; 
+    border: none; 
+    border-radius: 12px; 
+    background-color: #00BCD4; 
+    color: white; 
+    font-size: 16px; 
+    font-weight: bold;
+    cursor: pointer; 
+    box-shadow: 0 4px 6px rgba(0, 188, 212, 0.2);
+  }
+  button:active { transform: scale(0.98); }
+  
+  .reset-btn { background-color: #FFCDD2; color: #C62828; margin-top: 20px; box-shadow: none; width: 100%; }
+  #message { margin-top: 20px; font-weight: bold; color: #D81B60; min-height: 24px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>💖 亭君專屬喝水小幫手</h1>
+  <p class="subtitle">男友的愛心叮嚀：今天也要乖乖喝水！</p>
+  
+  <div class="status">
+    目前進度：<span id="currentAmount">0</span> / 750 cc
+  </div>
+
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div id="message"></div>
+
+  <div class="buttons">
+    <button onclick="addWater(50)">+ 50 cc<br><small>(喝一口)</small></button>
+    <button onclick="addWater(150)">+ 150 cc<br><small>(半杯)</small></button>
+    <button onclick="addWater(250)">+ 250 cc<br><small>(一杯)</small></button>
+    <button onclick="addWater(500)">+ 500 cc<br><small>(一瓶)</small></button>
+  </div>
+
+  <button class="reset-btn" onclick="resetWater()">🔄 新的一天 (歸零)</button>
+</div>
+
+<script>
+  const GOAL = 750;
+  let currentAmount = 0;
+
+  // 網頁載入時，讀取本地紀錄
+  window.onload = function() {
+    const savedAmount = localStorage.getItem('tingjun_water');
+    if (savedAmount) {
+      currentAmount = parseInt(savedAmount);
+    }
+    updateUI();
+  }
+
+  function addWater(amount) {
+    currentAmount += amount;
+    localStorage.setItem('tingjun_water', currentAmount);
+    updateUI();
+  }
+
+  function resetWater() {
+    if(confirm('確定要歸零，開始新的一天嗎？')) {
+      currentAmount = 0;
+      localStorage.setItem('tingjun_water', currentAmount);
+      updateUI();
+    }
+  }
+
+  function updateUI() {
+    document.getElementById('currentAmount').innerText = currentAmount;
+    
+    let percentage = (currentAmount / GOAL) * 100;
+    if (percentage > 100) percentage = 100;
+    document.getElementById('progressBar').style.width = percentage + '%';
+
+    const msgElement = document.getElementById('message');
+    if (currentAmount === 0) {
+      msgElement.innerText = '快去喝今天的第一口水吧！';
+    } else if (currentAmount < GOAL) {
+      msgElement.innerText = '很棒！繼續保持喔！✨';
+    } else {
+      msgElement.innerText = '🎉 達標了！妳超棒的啦！男友愛妳！';
+    }
+  }
+</script>
+
+</body>
+</html>
