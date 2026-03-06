@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>亭君的專屬喝水紀錄 2.0</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="喝水紀錄">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+
+<title>亭君的專屬喝水紀錄 3.0</title>
 <style>
   body { 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -64,12 +70,22 @@
   .reset-btn { background-color: #FFCDD2; color: #C62828; margin-top: 20px; box-shadow: none; width: 100%; font-size: 14px;}
   #message { margin-top: 20px; font-weight: bold; color: #D81B60; min-height: 24px; }
 
-  /* 歷史紀錄區塊的樣式 */
+  /* 歷史紀錄與總和區塊的樣式 */
   .history-section {
     margin-top: 30px;
     border-top: 2px dashed #B2EBF2;
     padding-top: 20px;
     text-align: left;
+  }
+  .weekly-total {
+    background-color: #FFF9C4;
+    color: #F57F17;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-size: 15px;
   }
   .history-section h3 {
     font-size: 16px;
@@ -129,6 +145,10 @@
   <button class="reset-btn" onclick="resetWater()">🔄 重新計算今日水量</button>
 
   <div class="history-section">
+    <div class="weekly-total">
+      🌟 近期累積喝水量：<span id="weeklyTotal">0</span> cc
+    </div>
+
     <h3>📅 過去一週的紀錄</h3>
     <ul class="history-list" id="historyList">
       </ul>
@@ -140,40 +160,28 @@
   let currentAmount = 0;
   let historyData = [];
   
-  // 取得今天的日期字串 (例如 "2023/10/25")
   function getTodayString() {
     return new Date().toLocaleDateString('zh-TW');
   }
 
-  // 網頁載入時，檢查日期並讀取紀錄
   window.onload = function() {
     const todayStr = getTodayString();
     const savedDate = localStorage.getItem('tingjun_last_date');
     const savedAmount = localStorage.getItem('tingjun_water_today');
     const savedHistory = localStorage.getItem('tingjun_water_history');
 
-    // 讀取歷史紀錄陣列
     if (savedHistory) {
       historyData = JSON.parse(savedHistory);
     }
 
     if (savedDate === todayStr) {
-      // 如果日期是今天，讀取今天的進度
-      if (savedAmount) {
-        currentAmount = parseInt(savedAmount);
-      }
+      if (savedAmount) currentAmount = parseInt(savedAmount);
     } else {
-      // 如果日期不是今天（代表換日了）
       if (savedDate && savedAmount !== null) {
-        // 把昨天的紀錄存進歷史陣列的開頭
         historyData.unshift({ date: savedDate, amount: parseInt(savedAmount) });
-        // 最多只保留 7 天的紀錄，避免畫面太長
-        if (historyData.length > 7) {
-          historyData.pop();
-        }
+        if (historyData.length > 7) historyData.pop();
         localStorage.setItem('tingjun_water_history', JSON.stringify(historyData));
       }
-      // 將今天的水量歸零，並更新儲存的日期
       currentAmount = 0;
       localStorage.setItem('tingjun_last_date', todayStr);
       localStorage.setItem('tingjun_water_today', currentAmount);
@@ -185,7 +193,6 @@
   function addWater(amount) {
     currentAmount += amount;
     localStorage.setItem('tingjun_water_today', currentAmount);
-    // 確保有儲存今天的日期（防呆機制）
     localStorage.setItem('tingjun_last_date', getTodayString());
     updateUI();
   }
@@ -199,14 +206,12 @@
   }
 
   function updateUI() {
-    // 更新今日進度與進度條
     document.getElementById('currentAmount').innerText = currentAmount;
     
     let percentage = (currentAmount / GOAL) * 100;
     if (percentage > 100) percentage = 100;
     document.getElementById('progressBar').style.width = percentage + '%';
 
-    // 更新鼓勵文字
     const msgElement = document.getElementById('message');
     if (currentAmount === 0) {
       msgElement.innerText = '快去喝今天的第一口水吧！';
@@ -216,9 +221,15 @@
       msgElement.innerText = '🎉 達標了！妳超棒的啦！男友愛妳！';
     }
 
-    // 更新歷史紀錄列表
+    // 計算總累積水量 (今天 + 歷史紀錄)
+    let totalWater = currentAmount;
+    historyData.forEach(item => {
+      totalWater += item.amount;
+    });
+    document.getElementById('weeklyTotal').innerText = totalWater;
+
     const historyList = document.getElementById('historyList');
-    historyList.innerHTML = ''; // 先清空
+    historyList.innerHTML = ''; 
 
     if (historyData.length === 0) {
       historyList.innerHTML = '<li class="empty-msg">明天再來看看，就會有紀錄囉！</li>';
@@ -226,9 +237,7 @@
       historyData.forEach(item => {
         const li = document.createElement('li');
         const isSuccess = item.amount >= GOAL;
-        // 如果達標，套用 success 樣式並加上勾勾
         if (isSuccess) li.classList.add('success');
-        
         li.innerHTML = `<span>${item.date}</span> <span>${item.amount} cc ${isSuccess ? '✅' : '💦'}</span>`;
         historyList.appendChild(li);
       });
